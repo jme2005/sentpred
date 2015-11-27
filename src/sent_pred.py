@@ -44,35 +44,43 @@ class SentencePredictor():
         inputstring = inputstring.lower()
         if self.model['edit1'] and\
                 (len(inputstring) > self.startfuzzy) and self.fuzzy:
-            e1 = set(self.edit1[inputstring])
+            try:
+                e1 = set(self.model['edit1'][inputstring])
+            except:
+                pass
         if self.model['edit2'] and\
                 (len(inputstring) > self.startfuzzy) and self.fuzzy:
-            e2 = set(self.edit2[inputstring])
-        if not self.model['edit1'] and self.fuzzy:
+            try:
+                e2 = set(self.model['edit2'][inputstring])
+            except:
+                pass
+        if not self.model['edit1'] and\
+                self.fuzzy and\
+                len(inputstring) > self.startfuzzy:
             e1 = self._edits1(inputstring)
         try:    
-            myhit = [item for item in self.model['lookup'][inputstring].items()]
+            nits = [item for item in self.model['lookup'][inputstring].items()]
         except:
-            myhit = []
+            hits = []
         if e1:
             for item in e1:
                 try:
-                    myhit_tmp = self.model['lookup'][item].items()
+                    hits_tmp = self.model['lookup'][item].items()
                 except:
                     continue
-                for hit in myhit_tmp:
-                    myhit.append((hit[0], int(hit[1]) * (1-(1-self.p)**len(item))))
+                for hit in hits_tmp:
+                    hits.append((hit[0], int(hit[1]) * (1-(1-self.p)**len(item))))
             if e2:
                 for item in e2:
                     try:
-                        myhit_tmp = self.model['lookup'][item].items()
+                        hits_tmp = self.model['lookup'][item].items()
                     except:
                         continue
-                    for hit in myhit_tmp:
-                        myhit.append((hit[0], int(hit[1]) * (1-(1-self.p**2)**len(item))))
+                    for hit in hits_tmp:
+                        hits.append((hit[0], int(hit[1]) * (1-(1-self.p**2)**len(item))))
             
-        myhit = set(myhit)    
-        output = sorted(myhit,key=self._getvalue)[-5:]
+        hits = set(hits)    
+        output = sorted(hits,key=self._getvalue)[-5:]
         return [item[0] for item in output]
     
     def save(self,path):

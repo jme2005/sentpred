@@ -54,22 +54,29 @@ class SentencePredictor:
                 e2 = set(self.model['edit2'][inputstring])
             except:
                 pass
+            
         if not self.model['edit1'] and\
                 self.fuzzy and\
                 len(inputstring) > self.startfuzzy:
             e1 = self._edits1(inputstring)
+            
         try:    
-            hits = [item for item in self.model['lookup'][inputstring].items()]
+            hits = [item for item in self.model['lookup'][inputstring][-5:]]
+            minimum = self._getvalue(hits[0])
         except:
             hits = []
+            minimum = 0
+            
         if e1:
             for item in e1:
                 try:
-                    hits_tmp = self.model['lookup'][item].items()
+                    hits_tmp = self.model['lookup'][item][-5:]
                 except:
                     continue
                 for hit in hits_tmp:
-                    hits.append((hit[0], int(hit[1]) * (1-(1-self.p)**len(item))))
+                    prob = float(hit[1]) * (1-(1-self.p)**len(item))
+                    if prob > minimum:
+                        hits.append((hit[0], prob))
             if e2:
                 for item in e2:
                     try:
@@ -100,7 +107,6 @@ class SentencePredictor:
         
     def evaluate(self,sentences):
         score = 0
-        
         for sent in sentences:
             for n in range(len(sent)/2):
                 res = set(self.predict(sent[:n]))
@@ -146,7 +152,8 @@ class SentencePredictor:
         lookup_dict = defaultdict(lambda: defaultdict(lambda: 0))
         for sentence in sents:
             for n in range(len(sentence)):
-                lookup_dict[sentence[:n].lower()][sentence] += 1           
+                lookup_dict[sentence[:n].lower()][sentence] += 1
+        self._sortdict(lookup_dict)
         return lookup_dict
     
     def _extracttext(self,path,threshold):
@@ -180,5 +187,17 @@ class SentencePredictor:
         
     def _getvalue(self,tup1):
         return tup1[1]
+        
+    def _sortdict(self,dictionary):
+        for subdict in dictionary.keys():
+            dictionary[subdict] = sorted(dictionary[subdict].items(),
+                                                   key=self._getvalue)
+        
+    
+        
+
+
+    
+    
         
     

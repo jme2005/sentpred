@@ -61,7 +61,7 @@ class SentencePredictor:
             e1 = self._edits1(inputstring)
             
         try:    
-            hits = [item for item in self.model['lookup'][inputstring][-5:]]
+            hits = [tuple(item) for item in self.model['lookup'][inputstring][-5:]]
             minimum = self._getvalue(hits[0])
         except:
             hits = []
@@ -84,7 +84,9 @@ class SentencePredictor:
                     except:
                         continue
                     for hit in hits_tmp:
-                        hits.append((hit[0], int(hit[1]) * (1-(1-self.p**2)**len(item))))
+                        prob = float(hit[1]) * (1-(1-self.p**2)**len(item))
+                    if prob > minimum:
+                        hits.append((hit[0], prob))
             
         hits = set(hits)    
         output = sorted(hits,key=self._getvalue)[-5:]

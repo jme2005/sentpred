@@ -11,7 +11,7 @@ import json
 import pickle
 import time
 
-class SentencePredictor():
+class SentencePredictor:
     
     def __init__(self, 
                  p=0.02,
@@ -59,7 +59,7 @@ class SentencePredictor():
                 len(inputstring) > self.startfuzzy:
             e1 = self._edits1(inputstring)
         try:    
-            nits = [item for item in self.model['lookup'][inputstring].items()]
+            hits = [item for item in self.model['lookup'][inputstring].items()]
         except:
             hits = []
         if e1:
@@ -97,6 +97,20 @@ class SentencePredictor():
             self.predict(inputstring)
         tac = time.time()
         print tac - tic
+        
+    def evaluate(self,sentences):
+        score = 0
+        
+        for sent in sentences:
+            for n in range(len(sent)/2):
+                res = set(self.predict(sent[:n]))
+                if sent in res:
+                    score += 1
+                    break
+                     
+        fraction = str(round(float(score)/len(sentences),2))
+        print "The model accurately predicted %s of the sentences" % (fraction)
+            
 
     def _get_edit1(self):
         keys = self.model['lookup'].keys()
